@@ -4,7 +4,7 @@
  */
 
 // 应用名
-export const APP_TITLE = 'fast-vue3';
+export const APP_TITLE = "XXB's Blog";
 
 // prefix
 export const API_PREFIX = '/api';
