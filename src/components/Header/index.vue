@@ -1,5 +1,5 @@
 <template>
-  <header class="antialiased bg-white Male text-slate-500 dark:text-slate-400 dark:bg-slate-900">
+  <header class="antialiased bg-white Male text-slate-500 header-blog">
     <div
       class="sticky top-0 z-40 w-full backdrop-blur flex-none transition-colors duration-500 lg:z-50 lg:border-b lg:border-slate-900/10 dark:border-slate-50/[0.06] bg-white/95 supports-backdrop-blur:bg-white/60 dark:bg-transparent"
     >
@@ -25,7 +25,7 @@
                 </ul>
               </nav>
               <div class="flex items-center pl-6 ml-6 border-l border-slate-200 dark:border-slate-800">
-                <el-tooltip :content="theme === 'light' ? '设置暗黑主题' : '设置明亮主题'">
+                <!-- <el-tooltip :content="theme === 'light' ? '设置暗黑主题' : '设置明亮主题'">
                   <el-button
                     class="nav-btn"
                     :shape="'circle'"
@@ -36,7 +36,7 @@
                     size="small"
                     @click="toggleTheme()"
                   />
-                </el-tooltip>
+                </el-tooltip> -->
                 <a
                   href="https://github.com/xuxb001/my-blog-vue3"
                   target="_bank"
@@ -64,7 +64,7 @@
   // 检测浏览器系统主题
   // const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)')
   const appStore = useAppStore();
-  // const useStore = useUserStore()
+  // const useStore = useUserStore();
   const theme = computed(() => {
     return appStore.theme;
   });
@@ -78,6 +78,9 @@
 </script>
 
 <style lang="less" scoped>
+  .header-blog {
+    background-color: rgb(8, 31, 92);
+  }
   .tag {
     margin-bottom: 0;
   }
