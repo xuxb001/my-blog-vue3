@@ -4,7 +4,7 @@
  */
 
 // 应用名
-export const APP_TITLE = "XXB's Blog";
+export const APP_TITLE = 'XXB';
 
 // prefix
 export const API_PREFIX = '/api';

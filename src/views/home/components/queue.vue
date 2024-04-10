@@ -1,10 +1,12 @@
 <template>
-  <div class="container-box max-w-5xl px-4 mx-auto pb-22 sm:px-6 md:px-8 xl:px-12 xl:max-w-6xl">
-    <div class="container-left">
-      <div v-for="(item, index) in items" :key="index" class="box box-left"></div>
-    </div>
-    <div class="container-right">
-      <div v-for="(item, index) in items" :key="index" class="box box-right"></div>
+  <div class="queue">
+    <div class="container-box">
+      <div class="container-left">
+        <div v-for="(item, index) in items" :key="index" class="box box-left"></div>
+      </div>
+      <div class="container-right">
+        <div v-for="(item, index) in items" :key="index" class="box box-right"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -14,7 +16,7 @@
   // @ts-ignore
   import anime from 'animejs';
 
-  const items = ref(['1', '2', '3', '4']);
+  const items = ref(['1', '2', '3', '4', '5']);
   onMounted(() => {
     const boxLeft = document.querySelectorAll('.box-left');
     const boxRight = document.querySelectorAll('.box-right');
@@ -36,20 +38,29 @@
 </script>
 
 <style lang="less" scoped>
-  .container-box {
-    display: flex;
-    justify-content: space-between;
-    .container {
-      &-left {
-        width: 25%;
-        display: flex;
-        flex-direction: column;
-      }
-      &-right {
-        width: 25%;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
+  .queue {
+    width: 100%;
+    height: 100vh;
+    background-image: url('../../../assets/images/home4.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    .container-box {
+      display: flex;
+      justify-content: space-between;
+      .container {
+        &-left {
+          width: 25%;
+          display: flex;
+          flex-direction: column;
+        }
+        &-right {
+          width: 25%;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+        }
       }
     }
   }
@@ -58,7 +69,7 @@
     opacity: 0;
     width: 100%;
     height: 100px;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.3);
     margin: 10px;
     text-align: center;
   }
