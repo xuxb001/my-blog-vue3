@@ -26,21 +26,6 @@
         <div class="operation-area">
           <el-button type="primary" :disabled="!selectedFile" @click="processExcel" :loading="processing"> 处理文件 </el-button>
         </div>
-
-        <!-- 预览区域 -->
-        <div v-if="previewData.length" class="preview-area">
-          <h3>数据预览</h3>
-          <el-table :data="previewData" border style="width: 100%" height="400">
-            <el-table-column prop="姓名" label="姓名" />
-            <el-table-column prop="考勤组" label="考勤组" />
-            <el-table-column prop="部门" label="部门" />
-            <el-table-column prop="工号" label="工号" />
-            <el-table-column prop="考勤日期" label="考勤日期" />
-            <el-table-column prop="考勤时间" label="考勤时间" />
-            <el-table-column prop="打卡时间" label="打卡时间" />
-          </el-table>
-        </div>
-
         <!-- 处理结果提示 -->
         <el-result v-if="processSuccess" icon="success" title="处理成功" sub-title="新的考勤统计表已生成" />
       </div>
@@ -59,29 +44,12 @@ import ExcelJS from 'exceljs';
 const selectedFile = ref<UploadFile | null>(null);
 const processing = ref(false);
 const processSuccess = ref(false);
-const previewData = ref<any[]>([]);
 const monthValue = ref('')
 
 // 处理文件选择
 const handleFileChange = async (uploadFile: UploadFile) => {
   selectedFile.value = uploadFile;
   processSuccess.value = false;
-
-  // 预览数据
-  try {
-    const file = uploadFile.raw as File;
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const worksheet = workbook.Sheets[workbook.SheetNames[1]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-    console.log('jsonData', jsonData);
-
-    // previewData.value = processedJsonData.slice(5, 10); // 显示前10条记录(5个人的上下班记录)
-
-    // previewData.value = jsonData.slice(0, 5); // 只显示前5行预览
-  } catch (error) {
-    ElMessage.error('文件预览失败，请检查文件格式');
-  }
 };
 
 // 处理Excel文件
@@ -104,7 +72,7 @@ const processExcel = async () => {
 
     // 处理数据：按人员和日期分组统计
     const processedData = processAttendanceData(jsonData);
-    console.log('processedData', processedData);
+    // console.log('processedData', processedData);
 
     // 使用ExcelJS创建新工作簿
     const newWorkbook = new ExcelJS.Workbook();
@@ -166,9 +134,9 @@ const processExcel = async () => {
       });
     });
 
-    // 设置日期列格式
-    newWorksheet.getColumn(5).numFmt = 'yyyy-mm-dd';
-    newWorksheet.getColumn(7).numFmt = 'yyyy-mm-dd hh:mm:ss';
+    // // 设置日期列格式
+    // newWorksheet.getColumn(5).numFmt = 'yyyy-mm-dd';
+    // newWorksheet.getColumn(7).numFmt = 'yyyy-mm-dd hh:mm:ss';
 
     // 生成文件并下载
     const buffer = await newWorkbook.xlsx.writeBuffer();
@@ -203,10 +171,8 @@ const processAttendanceData = (data: any[]) => {
   console.log('data', data);
   const firstKey = Object.keys(data[0])[0]
   const week = data[2];
-  console.log('week', week);
 
   const dealData = data.slice(4);
-  console.log(dealData, 'dealData');
 
   let allDate = {};
   for (const key in data[3]) {
