@@ -54,6 +54,7 @@ import { ElMessage,  } from 'element-plus';
 import { UploadFilled } from '@element-plus/icons-vue';
 import * as XLSX from 'xlsx';
 import type { UploadFile } from 'element-plus';
+import ExcelJS from 'exceljs';
 
 const selectedFile = ref<UploadFile | null>(null);
 const processing = ref(false);
@@ -105,60 +106,77 @@ const processExcel = async () => {
     const processedData = processAttendanceData(jsonData);
     console.log('processedData', processedData);
 
-    // 生成新的Excel文件
-    const newWorkbook = XLSX.utils.book_new();
-    const newWorksheet = XLSX.utils.json_to_sheet(processedData);
+    // 使用ExcelJS创建新工作簿
+    const newWorkbook = new ExcelJS.Workbook();
+    const newWorksheet = newWorkbook.addWorksheet('原始记录');
 
-    // 创建居中样式对象
-    const centerStyle = {
-      alignment: {
-        horizontal: 'center',
-        vertical: 'center'
-      },
-      font: {
-        color: { rgb: "FF0000" }, // 红色字体
-        // 或使用索引颜色（0-63）
-        // theme: 1 // 浅红色
-      }
-    };
-    // 遍历所有单元格应用样式
-    const range = XLSX.utils.decode_range(newWorksheet['!ref']!);
-    for(let R = range.s.r; R <= range.e.r; ++R) {
-      for(let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = {c:C, r:R};
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-
-        if(!newWorksheet[cell_ref]) continue;
-
-        // 保留原有单元格内容，添加样式
-        newWorksheet[cell_ref].s = {
-          ...newWorksheet[cell_ref].s,
-          ...centerStyle,
-          // 单独设置字体颜色（需要保留其他样式）
-          font: {
-            ...newWorksheet[cell_ref].s?.font,
-            color: { rgb: "0000FF" } // 蓝色
-          }
-        };
-      }
-    }
-    // 设置列宽
-    newWorksheet['!cols'] = [
-      { wch: 10 },
-      { wch: 35 },
-      { wch: 10 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 20 },
+    // 设置表头
+    newWorksheet.columns = [
+      { header: '姓名', key: '姓名', width: 12 },
+      { header: '部门', key: '部门', width: 40 },
+      { header: '工号', key: '工号', width: 12 },
+      { header: '职位', key: '职位', width: 20 },
+      { header: '考勤日期', key: '考勤日期', width: 20 },
+      { header: '考勤时间', key: '考勤时间', width: 20 },
+      { header: '打卡时间', key: '打卡时间', width: 25 },
+      { header: '打卡结果', key: '打卡结果', width: 12 },
+      { header: '打卡地址', key: '打卡地址', width: 25 }
     ];
-    XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '原始记录');
 
-    // 下载文件
-    const date = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(newWorkbook, `考勤统计表_${date}.xlsx`);
+    // 设置表头样式
+    newWorksheet.getRow(1).eachCell(cell => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFFCC' }
+      };
+      cell.font = {
+        bold: true,
+        name: '黑体',  // 新增字体设置
+        size: 12,     // 新增字号设置
+        color: { argb: '000000' }
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+    newWorksheet.getRow(1).height = 30; // 设置表头行高为30磅
+    // 添加数据行
+    processedData.forEach(record => {
+      const row = newWorksheet.addRow(record);
+      row.height = 48; // 设置数据行高为24磅
+      row.eachCell((cell, colNumber) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        cell.font = {  // 新增数据行字体设置
+          name: '黑体',
+          size: 12
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        // 针对考勤日期列（第5列）的特殊处理
+        if (colNumber === 5) {
+          // 判断是否
+          const matchResult = cell.text.match(/(星期六|星期日)/);
+          if (matchResult) {
+            cell.font.color = { argb: 'FFFF0000' }; // 红色字体
+          }
+        }
+      });
+    });
+
+    // 设置日期列格式
+    newWorksheet.getColumn(5).numFmt = 'yyyy-mm-dd';
+    newWorksheet.getColumn(7).numFmt = 'yyyy-mm-dd hh:mm:ss';
+
+    // 生成文件并下载
+    const buffer = await newWorkbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `考勤统计表_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
 
     processSuccess.value = true;
     ElMessage.success('处理成功！');
@@ -242,7 +260,7 @@ const processAttendanceData = (data: any[]) => {
             职位: '高级测试工程师',
             考勤日期: attendanceDate,
             考勤时间: `${date} ${attendanceTime}`,
-            打卡时间: checkTime,
+            打卡时间: `${date} ${checkTime}`,
             打卡结果: value === '年假' ? '年假' : '正常',
             打卡地址: '中国联通南方基地',
           });
