@@ -22,6 +22,14 @@ export default [
         },
         component: () => import('@/views/contain/index.vue'),
       },
+      {
+        path: '/upload',
+        name: 'menu',
+        meta: {
+          title: '上传解析',
+        },
+        component: () => import('@/views/upload/index.vue'),
+      },
     ],
   },
 ];
