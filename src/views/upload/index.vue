@@ -6,12 +6,7 @@
           <span>考勤数据导入</span>
         </div>
       </template>
-      <el-date-picker
-        v-model="monthValue"
-        type="month"
-        placeholder="Pick a month"
-        value-format="YYYY-MM"
-      />
+      <el-date-picker v-model="monthValue" type="month" placeholder="Pick a month" value-format="YYYY-MM" />
       <div class="content">
         <!-- 上传区域 -->
         <el-upload class="upload-demo" drag :auto-upload="false" accept=".xlsx,.xls" :on-change="handleFileChange" :limit="1">
@@ -67,11 +62,15 @@ const processExcel = async () => {
     const file = selectedFile.value.raw as File;
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data);
-    const worksheet = workbook.Sheets[workbook.SheetNames[1]];
+    const worksheet = workbook.Sheets['考勤明细'];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+    const worksheet1 = workbook.Sheets['人员明细'];
+    const jsonData1 = XLSX.utils.sheet_to_json(worksheet1);
+    console.log('jsonData1',jsonData1)
+
     // 处理数据：按人员和日期分组统计
-    const processedData = processAttendanceData(jsonData);
+    const processedData = processAttendanceData(jsonData, jsonData1);
     // console.log('processedData', processedData);
 
     // 使用ExcelJS创建新工作簿
@@ -157,7 +156,7 @@ const processExcel = async () => {
 };
 
 // 处理考勤数据
-const processAttendanceData = (data: any[]) => {
+const processAttendanceData = (data: any[], data1: any[]) => {
   // 格式化时间
   const formatExcelTime = (excelTime: number) => {
     if (typeof excelTime === 'number') {
@@ -201,10 +200,21 @@ const processAttendanceData = (data: any[]) => {
   });
 
   const processedData = [];
+  const aaMap = data1.reduce((map, item) => {
+    map[item.姓名] = item;
+    return map;
+  }, {} as Record<string, typeof data1[0]>);
 
   dealData.forEach((record) => {
     const name = record[firstKey];
     const type = record['__EMPTY']; // 签到或签退
+
+    const aaInfo = aaMap[name] || {
+      工号: 'D18626',
+      职位: '高级测试工程师',
+      打卡地址: '中国联通南方基地',
+      部门: '省分事业部-华东业务线-上海业务中心',
+    };
 
     // 遍历每一个打卡记录
     Object.entries(record).forEach(([key, value]) => {
@@ -221,14 +231,14 @@ const processAttendanceData = (data: any[]) => {
 
           processedData.push({
             姓名: name,
-            部门: '省分事业部-华东业务线-上海业务中心',
-            工号: 'D18626',
-            职位: '高级测试工程师',
+            部门: aaInfo.部门,
+            工号: aaInfo.工号,
+            职位: aaInfo.职位,
             考勤日期: attendanceDate,
             考勤时间: `${date} ${attendanceTime}`,
             打卡时间: `${date} ${checkTime}`,
             打卡结果: value === '年假' ? '年假' : '正常',
-            打卡地址: '中国联通南方基地',
+            打卡地址: aaInfo.打卡地址,
           });
         }
       }
